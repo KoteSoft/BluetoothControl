@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+        >
+    <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Руль"
+            />
+    <SeekBar
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBarRudd" android:max="63" android:progress="32" android:indeterminateOnly="false"
+            android:indeterminate="false" android:clickable="false" android:focusable="false"
+            android:focusableInTouchMode="false"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Тяга"
+            android:id="@+id/textView" android:layout_gravity="left|center_vertical"/>
+    <SeekBar
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBarThrot" android:layout_gravity="center_vertical" android:max="63"
+            android:clickable="false" android:focusable="false" android:focusableInTouchMode="false"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Отключено"
+            android:id="@+id/textView1" android:layout_gravity="center_vertical" android:textColor="#ff0000"
+            android:textSize="15pt"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Подключить"
+            android:id="@+id/button" android:layout_gravity="center_horizontal" android:textSize="10pt"
+            android:onClick="ConnectButtonHandler"/>
+    <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/progressBar" android:layout_gravity="center" android:visibility="invisible"/>
+</LinearLayout>
+
