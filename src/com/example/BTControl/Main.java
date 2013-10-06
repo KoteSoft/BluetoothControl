@@ -1,8 +1,10 @@
 package com.example.BTControl;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import android.bluetooth.BluetoothAdapter;
@@ -21,9 +23,15 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
     BluetoothSocket btSocket;
     SeekBar Rudder, Throttle;
     TextView ConnectStatus;
+    TextView CalibrateHint;
     Button ConnectButton;
+    Button CalibrateButton;
     ProgressBar Busy;
     UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    SharedPreferences sPref;
+
+    int CalibrateStage;
+    int Left;
 
     /**
      * Called when the activity is first created.
@@ -38,7 +46,9 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         Rudder = (SeekBar) findViewById(R.id.seekBarRudd);
         Throttle = (SeekBar) findViewById(R.id.seekBarThrot);
         ConnectStatus = (TextView) findViewById(R.id.textView1);
+        CalibrateHint = (TextView)findViewById(R.id.textView2);
         ConnectButton = (Button) findViewById(R.id.button);
+        CalibrateButton = (Button)findViewById(R.id.button1);
         Busy = (ProgressBar) findViewById(R.id.progressBar);
 
         Rudder.setOnSeekBarChangeListener(this);
@@ -46,7 +56,13 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
 
         Rudder.setEnabled(false);
         Throttle.setEnabled(false);
+        CalibrateButton.setEnabled(false);
 
+        CalibrateStage = 0;
+        sPref = getPreferences(MODE_PRIVATE);
+
+        Rudder.setProgress((sPref.getInt("RightLimit", 63) - sPref.getInt("LeftLimit", 0)) / 2);
+        Rudder.setMax(sPref.getInt("RightLimit", 63)-sPref.getInt("LeftLimit", 0));
     }
 
     public int TryConnect() throws InterruptedException {
@@ -103,6 +119,7 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         Connection = true;
         Rudder.setEnabled(true);
         Throttle.setEnabled(true);
+        CalibrateButton.setEnabled(true);
         return 0;
 
 
@@ -125,6 +142,7 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         Connection = false;
         Rudder.setEnabled(false);
         Throttle.setEnabled(false);
+        CalibrateButton.setEnabled(false);
         return 0;
     }
 
@@ -144,7 +162,7 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         }
         catch (Exception ex)
         {
-            Toast.makeText(this, "Ошибка"+ex.toString(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Ошибка 10: "+ex.toString(), Toast.LENGTH_LONG).show();
         }
         finally
         {
@@ -152,31 +170,38 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         }
     }
 
-    public void ThrottleClick(View view)
+    public void CalibrateButtonHandler(View view)
     {
+        SharedPreferences.Editor sEdit = sPref.edit();
 
-        try
+        switch (CalibrateStage)
         {
-            int val = Throttle.getProgress();
-            val |= 128;
-            btSocket.getOutputStream().write(val);
-        }
-        catch (Exception ex)
-        {
-            Toast.makeText(this, "Ошибка"+ex.toString(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    public void RudderClick(View view)
-    {
-        try
-        {
-            int val = Rudder.getProgress();
-            btSocket.getOutputStream().write(val);
-        }
-        catch (Exception ex)
-        {
-            Toast.makeText(this, "Ошибка"+ex.toString(), Toast.LENGTH_LONG).show();
+            case 0:
+                Rudder.setMax(63);
+                sEdit.putInt("LeftLimit", 0);
+                sEdit.commit();
+                CalibrateHint.setVisibility(View.VISIBLE);
+                CalibrateHint.setText("Усановите крайнее левое положение и нажмите 'Далее'");
+                CalibrateButton.setText("Далее");
+                CalibrateStage = 1;
+                break;
+            case 1:
+                Left = Rudder.getProgress();
+                CalibrateHint.setText("Усановите крайнее правое положение и нажмите 'Далее'");
+                CalibrateStage = 2;
+                break;
+            case 2:
+                sEdit.putInt("LeftLimit", Left);
+                sEdit.commit();
+                sEdit.putInt("RightLimit", Rudder.getProgress());
+                sEdit.commit();
+                Rudder.setProgress((sPref.getInt("RightLimit", 63) - sPref.getInt("LeftLimit", 0)) / 2);
+                Rudder.setMax(sPref.getInt("RightLimit", 63)-sPref.getInt("LeftLimit", 0));
+                CalibrateHint.setVisibility(View.INVISIBLE);
+                Toast.makeText(this, "Калибровка завершена", Toast.LENGTH_LONG).show();
+                CalibrateButton.setText("Калибровка");
+                CalibrateStage = 0;
+                break;
         }
     }
 
@@ -196,21 +221,24 @@ public class Main extends Activity implements SeekBar.OnSeekBarChangeListener{
         {
             int val = Throttle.getProgress();
             val |= 128;
-            btSocket.getOutputStream().write(val);
+            if(Connection)
+                btSocket.getOutputStream().write(val);
         }
         catch (Exception ex)
         {
-            Toast.makeText(this, "Ошибка"+ex.toString(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Ошибка 11: "+ex.toString(), Toast.LENGTH_LONG).show();
         }
 
         try
         {
-            int val = Rudder.getProgress();
-            btSocket.getOutputStream().write(val);
+            int val = Rudder.getProgress()+sPref.getInt("LeftLimit", 0);
+            //Log.v("My", Integer.toString(val));
+            if(Connection)
+                btSocket.getOutputStream().write(val);
         }
         catch (Exception ex)
         {
-            Toast.makeText(this, "Ошибка"+ex.toString(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Ошибка 12: "+ex.toString(), Toast.LENGTH_LONG).show();
         }
     }
 

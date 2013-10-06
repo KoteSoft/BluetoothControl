@@ -37,6 +37,17 @@
             android:text="Подключить"
             android:id="@+id/button" android:layout_gravity="center_horizontal" android:textSize="10pt"
             android:onClick="ConnectButtonHandler"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Калибровка крайних положений"
+            android:id="@+id/textView2" android:textSize="12pt" android:visibility="invisible"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Калибровка"
+            android:id="@+id/button1" android:layout_gravity="left|center_vertical" android:singleLine="true"
+            android:onClick="CalibrateButtonHandler"/>
     <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
